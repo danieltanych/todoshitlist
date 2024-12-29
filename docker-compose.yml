@@ -1,0 +1,46 @@
+version: "3.7"
+services:
+    app:
+        build:
+            args:
+                user: tanych
+                uid: 1000
+            context: ./
+            dockerfile: Dockerfile
+        image: todoshitlist-image
+        container_name: todoshitlist-container
+        restart: unless-stopped
+        working_dir: /var/www/
+        volumes:
+            - ./:/var/www
+        networks:
+            - todoshitlist-network
+    db:
+        image: mysql:8.0
+        container_name: db-todoshitlist-container
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: todoshitlist
+            MYSQL_ROOT_PASSWORD: 1234567890
+            MYSQL_PASSWORD: 1234567890
+            MYSQL_USER: slave
+            SERVICE_TAGS: dev
+            SERVICE_NAME: mysql
+        volumes:
+            - ./docker-compose/mysql:/docker-entrypoint-initdb.d
+        networks:
+            - todoshitlist-network
+    nginx:
+        image: nginx:alpine
+        container_name: nginx-todoshitlist-container
+        restart: unless-stopped
+        ports:
+            - 8000:80
+        volumes:
+            - ./:/var/www
+            - ./docker-compose/nginx:/etc/nginx/conf.d/
+        networks:
+            - todoshitlist-network
+networks:
+    todoshitlist-network:
+      driver: bridge
